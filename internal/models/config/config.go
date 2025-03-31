@@ -51,6 +51,19 @@ func New(options ...func(*Config)) *Config {
 	return c
 }
 
+func (c *Config) Initialize(path string) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("config")
+	viper.SetConfigType("toml")
+
+	setDefaults(viper.GetViper(), c)
+
+	err := viper.SafeWriteConfig()
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error writing configuration file: %v", err))
+	}
+}
+
 func setDefaults(v *viper.Viper, config interface{}) {
 	val := reflect.ValueOf(config)
 
@@ -67,11 +80,17 @@ func setDefaultsRecursive(v *viper.Viper, val reflect.Value, parentKey string) {
 		fieldType := val.Type().Field(i)
 		fieldName := fieldType.Name
 
+		tag := fieldType.Tag.Get("mapstructure")
+		if tag == "" {
+			// If no `mapstructure` tag is found, use the original field name
+			tag = fieldName
+		}
+
 		var key string
 		if parentKey != "" {
-			key = parentKey + "." + fieldName
+			key = parentKey + "." + tag
 		} else {
-			key = fieldName
+			key = tag
 		}
 
 		if field.Kind() == reflect.Struct {
@@ -79,18 +98,5 @@ func setDefaultsRecursive(v *viper.Viper, val reflect.Value, parentKey string) {
 		} else {
 			v.SetDefault(key, field.Interface())
 		}
-	}
-}
-
-func (c *Config) Initialize(path string) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
-
-	setDefaults(viper.GetViper(), c)
-
-	err := viper.SafeWriteConfig()
-	if err != nil {
-		utils.ErrorAndExit(fmt.Sprintf("fatal: error writing configuration file: %v", err))
 	}
 }
