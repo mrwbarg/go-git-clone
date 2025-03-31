@@ -30,6 +30,7 @@
           buildInputs = with pkgs; [
             go
             gopls
+            golangci-lint
             delve
             pre-commit
             git
