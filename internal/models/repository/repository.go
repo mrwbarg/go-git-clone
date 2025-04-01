@@ -5,13 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mrwbarg/go-git-clone/internal/models/config"
 	"github.com/mrwbarg/go-git-clone/internal/utils"
 )
 
 type Repository struct {
 	worktree string
 	gitdir   string
-	conf     string
+	conf     config.Config
 }
 
 func (r *Repository) path(path ...string) string {
@@ -28,7 +29,7 @@ func (r *Repository) dir(make bool, path ...string) (string, error) {
 		return "", err
 	}
 
-	if !(pathExists) {
+	if pathExists {
 		isDir, err := utils.IsDirectory(fullPath)
 		if err != nil {
 			return "", err
@@ -52,8 +53,8 @@ func (r *Repository) dir(make bool, path ...string) (string, error) {
 	return "", nil
 }
 
-func (r *Repository) file(path ...string) (string, error) {
-	dirPath, err := r.dir(false, path[:len(path)-1]...)
+func (r *Repository) file(make bool, path ...string) (string, error) {
+	dirPath, err := r.dir(make, path[:len(path)-1]...)
 	if err != nil {
 		return "", err
 	}
@@ -76,12 +77,28 @@ func WithPath(path string, force bool) func(*Repository) {
 		utils.ErrorAndExit(fmt.Sprintf("fatal: not a git repository: %s", path))
 	}
 
-	// TODO: parse config
-	conf := "not implemented"
 	return func(r *Repository) {
 		r.worktree = path
 		r.gitdir = gitdir
-		r.conf = conf
+
+		configPath, err := r.file(false, "config.toml")
+		if err != nil {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: error checking for config file: %v", err))
+		}
+
+		configPathExists, err := utils.PathExists(configPath)
+		if err != nil {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: error checking if %s exists: %v", configPath, err))
+		}
+		if configPath != "" && configPathExists {
+			r.conf.Load(filepath.Dir(configPath))
+		} else if !force {
+			utils.ErrorAndExit("fatal: no config file found")
+		}
+
+		if !force && r.conf.Core.RepositoryFormatVersion != 0 {
+			utils.ErrorAndExit("fatal: unsupported repositoryformatversion")
+		}
 	}
 }
 
