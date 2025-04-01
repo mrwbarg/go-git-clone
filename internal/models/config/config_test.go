@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewWithNoOptions(t *testing.T) {
+func Test_New_WithNoOptions(t *testing.T) {
 	config := New()
 
 	assert.Equal(t, 0, config.Core.RepositoryFormatVersion)
@@ -16,7 +16,7 @@ func TestNewWithNoOptions(t *testing.T) {
 	assert.Equal(t, false, config.Core.Bare)
 }
 
-func TestNewWithOptions(t *testing.T) {
+func Test_New_WithOptions(t *testing.T) {
 	config := New(WithRepositoryFormatVersion(1), WithFileMode(true), WithBare(true))
 
 	assert.Equal(t, 1, config.Core.RepositoryFormatVersion)
@@ -24,7 +24,7 @@ func TestNewWithOptions(t *testing.T) {
 	assert.Equal(t, true, config.Core.Bare)
 }
 
-func TestSetDefaults(t *testing.T) {
+func Test_SetDefaults(t *testing.T) {
 	type LevelTwo struct {
 		Arg21 string `mapstructure:"arg21"`
 		Arg22 string `mapstructure:"arg22"`
@@ -40,11 +40,30 @@ func TestSetDefaults(t *testing.T) {
 	assert.ElementsMatch(t, []string{"arg11", "level2.arg21", "level2.arg22"}, v.AllKeys())
 }
 
-func TestConfigInitialize(t *testing.T) {
+func Test_Config_Initialize(t *testing.T) {
 	config := New()
 	tempDir := t.TempDir()
 	config.Initialize(tempDir)
 
-	_, err := os.Stat(tempDir + "/config.toml")
+	fileInfo, err := os.Stat(tempDir + "/config.toml")
+	assert.Equal(t, "config.toml", fileInfo.Name())
 	assert.NoError(t, err)
+}
+
+func Test_Config_Load(t *testing.T) {
+	tempDir := t.TempDir()
+
+	existingConfig := New(
+		WithRepositoryFormatVersion(1),
+		WithFileMode(true),
+		WithBare(true),
+	)
+	existingConfig.Initialize(tempDir)
+
+	config := New()
+	config.Load(tempDir)
+
+	assert.Equal(t, 1, config.Core.RepositoryFormatVersion)
+	assert.Equal(t, true, config.Core.FileMode)
+	assert.Equal(t, true, config.Core.Bare)
 }

@@ -52,15 +52,33 @@ func New(options ...func(*Config)) *Config {
 }
 
 func (c *Config) Initialize(path string) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
+	v := viper.New()
+	v.AddConfigPath(path)
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
 
-	setDefaults(viper.GetViper(), c)
+	setDefaults(v, c)
 
-	err := viper.SafeWriteConfig()
+	err := v.SafeWriteConfig()
 	if err != nil {
 		utils.ErrorAndExit(fmt.Sprintf("fatal: error writing configuration file: %v", err))
+	}
+}
+
+func (c *Config) Load(path string) {
+	v := viper.New()
+	v.AddConfigPath(path)
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+
+	err := v.ReadInConfig()
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error reading configuration file: %v", err))
+	}
+
+	err = v.Unmarshal(c)
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error unmarshalling configuration: %v", err))
 	}
 }
 
