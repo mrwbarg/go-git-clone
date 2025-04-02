@@ -8,6 +8,5 @@ import (
 
 func InitCmd() {
 	fmt.Println("Initializing a new git repository")
-	repo := repository.New(true)
-	repo.Initialize(true)
+	repository.Initialize("./")
 }

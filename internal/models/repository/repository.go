@@ -68,23 +68,19 @@ func (r *Repository) file(make bool, path ...string) (string, error) {
 
 func WithPath(path string, skipValidation bool) func(*Repository) {
 	gitdir := filepath.Join(path, "potato")
-	isDir, err := utils.IsDirectory(gitdir)
+	isDir, _ := utils.IsDirectory(gitdir)
 
-	if !skipValidation && (!isDir || err != nil) {
+	if !skipValidation && !isDir {
 		utils.ErrorAndExit(fmt.Sprintf("fatal: not a git repository: %s", path))
 	}
 
 	return func(r *Repository) {
-
 		configPath, err := r.file(false, "config.toml")
 		if err != nil {
 			utils.ErrorAndExit(fmt.Sprintf("fatal: error checking for config file: %v", err))
 		}
 
-		configPathExists, err := utils.PathExists(configPath)
-		if err != nil {
-			utils.ErrorAndExit(fmt.Sprintf("fatal: error checking if %s exists: %v", configPath, err))
-		}
+		configPathExists, _ := utils.PathExists(configPath)
 		if configPath != "" && configPathExists {
 			r.conf.Load(filepath.Dir(configPath))
 		} else if !skipValidation {
@@ -101,11 +97,8 @@ func WithPath(path string, skipValidation bool) func(*Repository) {
 
 }
 
-func New(skipValidation bool, options ...func(*Repository)) *Repository {
+func New(options ...func(*Repository)) *Repository {
 	repo := &Repository{}
-
-	// default to current directory
-	WithPath("./", skipValidation)(repo)
 
 	for _, option := range options {
 		option(repo)
@@ -118,6 +111,31 @@ func New(skipValidation bool, options ...func(*Repository)) *Repository {
 	return repo
 }
 
-func (r *Repository) Initialize(force bool) {
+func Initialize(path string) *Repository {
+	repo := New(WithPath(path, true))
 
+	pathExists, _ := utils.PathExists(repo.worktree)
+	if pathExists {
+		isDir, _ := utils.IsDirectory(repo.worktree)
+		if !isDir {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: %s is not a directory", repo.worktree))
+		}
+
+		isRepo, _ := utils.IsDirectory(repo.gitdir)
+		if isRepo {
+			utils.ErrorAndExit("fatal: repository already exists")
+		}
+	} else {
+		err := os.MkdirAll(repo.worktree, os.ModePerm)
+		if err != nil {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: error creating directory %s: %v", repo.worktree, err))
+		}
+	}
+
+	repo.dir(true, "branches")
+	repo.dir(true, "objects")
+	repo.dir(true, "refs", "tags")
+	repo.dir(true, "refs", "heads")
+
+	return repo
 }
