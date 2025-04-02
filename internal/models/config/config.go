@@ -100,7 +100,6 @@ func setDefaultsRecursive(v *viper.Viper, val reflect.Value, parentKey string) {
 
 		tag := fieldType.Tag.Get("mapstructure")
 		if tag == "" {
-			// If no `mapstructure` tag is found, use the original field name
 			tag = fieldName
 		}
 

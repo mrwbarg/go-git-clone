@@ -66,20 +66,15 @@ func (r *Repository) file(make bool, path ...string) (string, error) {
 	return "", nil
 }
 
-func WithPath(path string, force bool) func(*Repository) {
-	gitdir := filepath.Join(path, ".git")
-
+func WithPath(path string, skipValidation bool) func(*Repository) {
+	gitdir := filepath.Join(path, "potato")
 	isDir, err := utils.IsDirectory(gitdir)
-	if err != nil {
-		utils.ErrorAndExit(fmt.Sprintf("fatal: error checking if %s is a directory: %v", gitdir, err))
-	}
-	if !(force || isDir) {
+
+	if !skipValidation && (!isDir || err != nil) {
 		utils.ErrorAndExit(fmt.Sprintf("fatal: not a git repository: %s", path))
 	}
 
 	return func(r *Repository) {
-		r.worktree = path
-		r.gitdir = gitdir
 
 		configPath, err := r.file(false, "config.toml")
 		if err != nil {
@@ -92,18 +87,25 @@ func WithPath(path string, force bool) func(*Repository) {
 		}
 		if configPath != "" && configPathExists {
 			r.conf.Load(filepath.Dir(configPath))
-		} else if !force {
+		} else if !skipValidation {
 			utils.ErrorAndExit("fatal: no config file found")
 		}
 
-		if !force && r.conf.Core.RepositoryFormatVersion != 0 {
+		if !skipValidation && r.conf.Core.RepositoryFormatVersion != 0 {
 			utils.ErrorAndExit("fatal: unsupported repositoryformatversion")
 		}
+
+		r.worktree = path
+		r.gitdir = gitdir
 	}
+
 }
 
-func New(options ...func(*Repository)) *Repository {
+func New(skipValidation bool, options ...func(*Repository)) *Repository {
 	repo := &Repository{}
+
+	// default to current directory
+	WithPath("./", skipValidation)(repo)
 
 	for _, option := range options {
 		option(repo)
@@ -116,6 +118,6 @@ func New(options ...func(*Repository)) *Repository {
 	return repo
 }
 
-func (r *Repository) Create(path string) {
+func (r *Repository) Initialize(force bool) {
 
 }
