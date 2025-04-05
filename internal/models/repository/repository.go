@@ -67,7 +67,7 @@ func (r *Repository) file(make bool, path ...string) (string, error) {
 }
 
 func WithPath(path string, skipValidation bool) func(*Repository) {
-	gitdir := filepath.Join(path, "potato")
+	gitdir := filepath.Join(path, ".git")
 	isDir, _ := utils.IsDirectory(gitdir)
 
 	if !skipValidation && !isDir {
@@ -132,10 +132,45 @@ func Initialize(path string) *Repository {
 		}
 	}
 
-	repo.dir(true, "branches")
-	repo.dir(true, "objects")
-	repo.dir(true, "refs", "tags")
-	repo.dir(true, "refs", "heads")
+	_, err := repo.dir(true, "branches")
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	_, err = repo.dir(true, "objects")
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	_, err = repo.dir(true, "refs", "tags")
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	_, err = repo.dir(true, "refs", "heads")
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	err = os.WriteFile(
+		repo.path("description"),
+		[]byte("Unnamed repository; edit this file 'description' to name the repository.\n"),
+		os.ModePerm,
+	)
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	err = os.WriteFile(
+		repo.path("HEAD"),
+		[]byte("ref: refs/heads/master\n"),
+		os.ModePerm,
+	)
+	if err != nil {
+		utils.ErrorAndExit(fmt.Sprintf("fatal: error initializing the repo: %v", err))
+	}
+
+	repo.conf.Initialize(repo.gitdir)
 
 	return repo
 }

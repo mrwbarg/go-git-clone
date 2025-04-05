@@ -42,7 +42,7 @@ func Test_Repository_Dir_Exists(t *testing.T) {
 		gitdir: tempDir,
 	}
 
-	os.Mkdir(tempDir+"/objects", os.ModePerm)
+	_ = os.Mkdir(tempDir+"/objects", os.ModePerm)
 
 	path, err := repo.dir(false, "objects")
 	assert.Equal(t, tempDir+"/objects", path)
@@ -78,7 +78,7 @@ func Test_Repository_File_PathExists(t *testing.T) {
 		gitdir: tempDir,
 	}
 
-	os.Mkdir(tempDir+"/objects", os.ModePerm)
+	_ = os.Mkdir(tempDir+"/objects", os.ModePerm)
 
 	path, err := repo.file(false, "objects", "HEAD")
 	assert.Equal(t, tempDir+"/objects/HEAD", path)
@@ -91,4 +91,35 @@ func Test_Repository_File_PathExists(t *testing.T) {
 	headFileInfo, err := os.Stat(tempDir + "/objects/HEAD")
 	assert.Nil(t, headFileInfo)
 	assert.Error(t, err)
+}
+
+func Test_Repository_Initialize(t *testing.T) {
+	tempDir := t.TempDir()
+	repo := Initialize(tempDir)
+
+	assert.NotNil(t, repo)
+
+	objectsPath, err := os.Stat(tempDir + "/.git/objects")
+	assert.NoError(t, err)
+	assert.True(t, objectsPath.IsDir())
+
+	refsPath, err := os.Stat(tempDir + "/.git/refs")
+	assert.NoError(t, err)
+	assert.True(t, refsPath.IsDir())
+
+	tagsPath, err := os.Stat(tempDir + "/.git/refs/tags")
+	assert.NoError(t, err)
+	assert.True(t, tagsPath.IsDir())
+
+	headsPath, err := os.Stat(tempDir + "/.git/refs/heads")
+	assert.NoError(t, err)
+	assert.True(t, headsPath.IsDir())
+
+	descriptionFile, err := os.Stat(tempDir + "/.git/description")
+	assert.NoError(t, err)
+	assert.False(t, descriptionFile.IsDir())
+
+	headFile, err := os.Stat(tempDir + "/.git/HEAD")
+	assert.NoError(t, err)
+	assert.False(t, headFile.IsDir())
 }
