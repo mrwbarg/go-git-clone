@@ -1,9 +1,13 @@
 package repository
 
 import (
+	"bytes"
+	"compress/zlib"
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/mrwbarg/go-git-clone/internal/models/object"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -122,4 +126,36 @@ func Test_Repository_Initialize(t *testing.T) {
 	headFile, err := os.Stat(tempDir + "/.git/HEAD")
 	assert.NoError(t, err)
 	assert.False(t, headFile.IsDir())
+}
+
+func Test_Repository_ReadObject(t *testing.T) {
+	tempDir := t.TempDir()
+	repo := Initialize(tempDir)
+
+	hash := "b6f7e8c0a2b3c4d5e6f7a8b9c0d1e2f3g4h5i6j7k8"
+
+	// Create a test file
+	testFilePath := fmt.Sprintf("%s/.git/objects/%s", tempDir, hash[0:2])
+	_ = os.MkdirAll(testFilePath, os.ModePerm)
+
+	testFile := fmt.Sprintf("%s/.git/objects/%s/%s", tempDir, hash[0:2], hash[2:])
+
+	var fileBuffer bytes.Buffer
+	writer := zlib.NewWriter(&fileBuffer)
+
+	data := "this is the file content"
+	objType := object.CommitType
+	_, _ = fmt.Fprintf(writer, "%s %d\x00%s", objType, len(data), data)
+	_ = writer.Close()
+
+	err := os.WriteFile(testFile, fileBuffer.Bytes(), os.ModePerm)
+	assert.NoError(t, err)
+
+	obj, err := repo.ReadObject(hash)
+	assert.NoError(t, err)
+	if assert.NotNil(t, obj) {
+		assert.Equal(t, object.CommitType, (*obj).Type())
+		assert.Equal(t, data, string((*obj).Content()))
+	}
+
 }

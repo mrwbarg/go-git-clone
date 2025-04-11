@@ -1,11 +1,16 @@
 package repository
 
 import (
+	"bytes"
+	"compress/zlib"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/mrwbarg/go-git-clone/internal/models/config"
+	"github.com/mrwbarg/go-git-clone/internal/models/object"
 	"github.com/mrwbarg/go-git-clone/internal/utils"
 )
 
@@ -64,6 +69,72 @@ func (r *Repository) file(make bool, path ...string) (string, error) {
 	}
 
 	return "", nil
+}
+
+func (r *Repository) ReadObject(sha string) (*object.Object, error) {
+	path, err := r.file(false, "objects", sha[:2], sha[2:])
+	if err != nil {
+		return nil, err
+	}
+
+	isFile, _ := utils.IsFile(path)
+	if !isFile {
+		return nil, fmt.Errorf("fatal: object %s not found", sha)
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error reading object %s: %v", sha, err)
+	}
+
+	reader, err := zlib.NewReader(file)
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error decompressing object %s: %v", sha, err)
+	}
+	err = file.Close()
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error closing object %s: %v", sha, err)
+	}
+
+	uncompressed, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error reading object %s: %v", sha, err)
+	}
+	err = reader.Close()
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error closing object %s: %v", sha, err)
+	}
+
+	format, sizeAndData, _ := bytes.Cut(uncompressed, []byte(" "))
+	size, data, _ := bytes.Cut(sizeAndData, []byte("\x00"))
+
+	intSize, err := strconv.Atoi(string(size))
+	if err != nil {
+		return nil, fmt.Errorf("fatal: error parsing object size for %s: %v", sha, err)
+	}
+
+	if intSize != len(data) {
+		return nil, fmt.Errorf("fatal: invalid object size for %s. Expected: %d. Actual: %d", sha, intSize, len(data))
+	}
+
+	var obj object.Object
+	switch object.ObjectType(format) {
+	case object.CommitType:
+		obj = &object.Commit{}
+	case object.TreeType:
+		obj = &object.Tree{}
+	case object.BlobType:
+		obj = &object.Blob{}
+	case object.TagType:
+		obj = &object.Tag{}
+	default:
+		return nil, fmt.Errorf("fatal: unknown object type %s", format)
+	}
+
+	obj.Deserialize(data)
+
+	return &obj, nil
+
 }
 
 func WithPath(path string, skipValidation bool) func(*Repository) {
