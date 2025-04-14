@@ -157,5 +157,21 @@ func Test_Repository_ReadObject(t *testing.T) {
 		assert.Equal(t, object.CommitType, (*obj).Type())
 		assert.Equal(t, data, string((*obj).Content()))
 	}
+}
 
+func Test_Repository_WriteObject(t *testing.T) {
+	tempDir := t.TempDir()
+	repo := Initialize(tempDir)
+
+	obj := &object.Commit{}
+	obj.Deserialize([]byte("commit 24\x00this is the file content"))
+	hash := obj.Hash()
+
+	err := repo.WriteObject(obj)
+	assert.NoError(t, err)
+
+	testFilePath := fmt.Sprintf("%s/.git/objects/%s/%s", tempDir, hash[0:2], hash[2:])
+	fileInfo, err := os.Stat(testFilePath)
+	assert.NoError(t, err)
+	assert.False(t, fileInfo.IsDir())
 }

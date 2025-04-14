@@ -71,6 +71,22 @@ func (r *Repository) file(make bool, path ...string) (string, error) {
 	return "", nil
 }
 
+func (r *Repository) WriteObject(obj object.Object) error {
+	hash := obj.Hash()
+
+	path, err := r.file(true, "objects", hash[:2], hash[2:])
+	if err != nil {
+		return fmt.Errorf("fatal: error writing object %s: %v", hash, err)
+	}
+
+	err = os.WriteFile(path, obj.Serialize(), os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("fatal: error writing object %s: %v", hash, err)
+	}
+
+	return nil
+}
+
 func (r *Repository) ReadObject(sha string) (*object.Object, error) {
 	path, err := r.file(false, "objects", sha[:2], sha[2:])
 	if err != nil {
