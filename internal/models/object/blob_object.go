@@ -4,7 +4,7 @@ type Blob struct {
 	baseObject
 }
 
-func (b *Blob) Deserialize(data []byte) {
+func (b *Blob) Deserialize(data []byte) error {
 	b.objectType = BlobType
-	b.baseObject.Deserialize(data)
+	return b.baseObject.Deserialize(data)
 }

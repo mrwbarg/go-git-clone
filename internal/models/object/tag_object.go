@@ -4,7 +4,7 @@ type Tag struct {
 	baseObject
 }
 
-func (t *Tag) Deserialize(data []byte) {
+func (t *Tag) Deserialize(data []byte) error {
 	t.objectType = TagType
-	t.baseObject.Deserialize(data)
+	return t.baseObject.Deserialize(data)
 }

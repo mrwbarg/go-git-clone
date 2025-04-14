@@ -4,7 +4,7 @@ type Commit struct {
 	baseObject
 }
 
-func (c *Commit) Deserialize(data []byte) {
+func (c *Commit) Deserialize(data []byte) error {
 	c.objectType = CommitType
-	c.baseObject.Deserialize(data)
+	return c.baseObject.Deserialize(data)
 }

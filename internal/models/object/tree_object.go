@@ -4,7 +4,7 @@ type Tree struct {
 	baseObject
 }
 
-func (t *Tree) Deserialize(data []byte) {
+func (t *Tree) Deserialize(data []byte) error {
 	t.objectType = TreeType
-	t.baseObject.Deserialize(data)
+	return t.baseObject.Deserialize(data)
 }
