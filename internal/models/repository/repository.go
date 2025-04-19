@@ -129,14 +129,22 @@ func (r *Repository) ReadObject(sha string) (*object.Object, error) {
 }
 
 func WithPath(path string, skipValidation bool) func(*Repository) {
-	gitdir := filepath.Join(path, ".git")
-	isDir, _ := utils.IsDirectory(gitdir)
 
-	if !skipValidation && !isDir {
-		utils.ErrorAndExit(fmt.Sprintf("fatal: not a git repository: %s", path))
+	rootPath, err := utils.FindRepoRoot(path)
+	if err != nil {
+		if skipValidation {
+			rootPath = path
+		} else {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: not a git repository: %s", path))
+		}
 	}
 
+	gitdir := filepath.Join(rootPath, ".git")
+
 	return func(r *Repository) {
+		r.worktree = path
+		r.gitdir = gitdir
+
 		configPath, err := r.file(false, "config.toml")
 		if err != nil {
 			utils.ErrorAndExit(fmt.Sprintf("fatal: error checking for config file: %v", err))
@@ -153,8 +161,6 @@ func WithPath(path string, skipValidation bool) func(*Repository) {
 			utils.ErrorAndExit("fatal: unsupported repositoryformatversion")
 		}
 
-		r.worktree = path
-		r.gitdir = gitdir
 	}
 
 }

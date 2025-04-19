@@ -17,6 +17,13 @@ const (
 	TagType    ObjectType = "tag"
 )
 
+var ObjectTypes = []ObjectType{
+	CommitType,
+	TreeType,
+	BlobType,
+	TagType,
+}
+
 type Object interface {
 	Serialize() []byte
 	Deserialize(data []byte) error
