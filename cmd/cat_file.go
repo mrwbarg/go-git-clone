@@ -10,7 +10,7 @@ func init() {
 }
 
 var catFileCmd = &cobra.Command{
-	Use:   "cat-file sha",
+	Use:   "cat-file SHA",
 	Short: "Prints the raw content of an object to STDOUT.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

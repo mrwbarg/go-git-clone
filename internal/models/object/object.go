@@ -66,7 +66,7 @@ func (o *baseObject) Deserialize(data []byte) error {
 	return nil
 }
 
-func New(data []byte) (*Object, error) {
+func Load(data []byte) (*Object, error) {
 	format, sizeAndData, _ := bytes.Cut(data, []byte(" "))
 	size, content, _ := bytes.Cut(sizeAndData, []byte("\x00"))
 
@@ -79,8 +79,12 @@ func New(data []byte) (*Object, error) {
 		return nil, fmt.Errorf("fatal: invalid object size. Expected: %d. Actual: %d", intSize, len(data))
 	}
 
+	return New(ObjectType(format), content)
+}
+
+func New(objectType ObjectType, content []byte) (*Object, error) {
 	var obj Object
-	switch ObjectType(format) {
+	switch objectType {
 	case CommitType:
 		obj = &Commit{}
 	case TreeType:
@@ -90,13 +94,14 @@ func New(data []byte) (*Object, error) {
 	case TagType:
 		obj = &Tag{}
 	default:
-		return nil, fmt.Errorf("fatal: unknown object type %s", format)
+		return nil, fmt.Errorf("fatal: unknown object type %s", objectType)
 	}
 
-	err = obj.Deserialize(content)
+	err := obj.Deserialize(content)
 	if err != nil {
 		return nil, fmt.Errorf("fatal: error deserializing object: %v", err)
 	}
+
 	return &obj, nil
 }
 

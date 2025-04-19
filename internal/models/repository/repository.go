@@ -119,7 +119,7 @@ func (r *Repository) ReadObject(sha string) (*object.Object, error) {
 		return nil, fmt.Errorf("fatal: error closing object %s: %v", sha, err)
 	}
 
-	obj, err := object.New(uncompressed)
+	obj, err := object.Load(uncompressed)
 	if err != nil {
 		return nil, fmt.Errorf("fatal: error creating object %s: %v", sha, err)
 	}

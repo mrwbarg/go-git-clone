@@ -163,7 +163,7 @@ func Test_Repository_WriteObject(t *testing.T) {
 	tempDir := t.TempDir()
 	repo := Initialize(tempDir)
 
-	obj, _ := object.New([]byte("commit 24\x00this is the file content"))
+	obj, _ := object.Load([]byte("commit 24\x00this is the file content"))
 	hash := (*obj).Hash()
 
 	err := repo.WriteObject(*obj)

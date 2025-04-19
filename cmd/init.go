@@ -10,7 +10,7 @@ func init() {
 }
 
 var initCmd = &cobra.Command{
-	Use:   "init [path]",
+	Use:   "init [PATH]",
 	Short: "Initialize a new git repository in the given path. If no path is provided, the current directory will be used.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

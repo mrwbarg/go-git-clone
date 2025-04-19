@@ -20,5 +20,4 @@ func CatFileCmd(sha string) {
 	}
 
 	fmt.Print(string((*object).Content()))
-
 }
