@@ -1,6 +1,6 @@
 package utils
 
-var kvlmFixture []byte = []byte(`tree 29ff16c9c14e2652b22f8b78bb08a5a07930c147
+var KVLMFixture []byte = []byte(`tree 29ff16c9c14e2652b22f8b78bb08a5a07930c147
 parent 206941306e8a8af65b66eaaaea388a7ae24d49a0
 author Mauricio Barg <mbarg@email.com> 1527025023 +0200
 author Peter Parker <pparker@email.com> 1527025023 +0200

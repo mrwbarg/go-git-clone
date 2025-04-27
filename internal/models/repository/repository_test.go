@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mrwbarg/go-git-clone/internal/models/object"
+	"github.com/mrwbarg/go-git-clone/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -143,7 +144,7 @@ func Test_Repository_ReadObject(t *testing.T) {
 	var fileBuffer bytes.Buffer
 	writer := zlib.NewWriter(&fileBuffer)
 
-	data := "this is the file content"
+	data := string(utils.KVLMFixture)
 	objType := object.CommitType
 	_, _ = fmt.Fprintf(writer, "%s %d\x00%s", objType, len(data), data)
 	_ = writer.Close()
@@ -163,7 +164,7 @@ func Test_Repository_WriteObject(t *testing.T) {
 	tempDir := t.TempDir()
 	repo := Initialize(tempDir)
 
-	obj, _ := object.Load([]byte("commit 24\x00this is the file content"))
+	obj, _ := object.Load(append([]byte("commit 1167\x00"), utils.KVLMFixture...))
 	hash := (*obj).Hash()
 
 	err := repo.WriteObject(*obj)

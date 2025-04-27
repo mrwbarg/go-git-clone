@@ -76,7 +76,7 @@ func Load(data []byte) (*Object, error) {
 	}
 
 	if intSize != len(content) {
-		return nil, fmt.Errorf("fatal: invalid object size. Expected: %d. Actual: %d", intSize, len(data))
+		return nil, fmt.Errorf("fatal: invalid object size. Expected: %d. Actual: %d", intSize, len(content))
 	}
 
 	return New(ObjectType(format), content)

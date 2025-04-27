@@ -65,7 +65,7 @@ func Test_OrderedMap_Items(t *testing.T) {
 func Test_ParseKVLM(t *testing.T) {
 
 	parsed := NewOrderedMap[string, []string]()
-	err := ParseKVLM(kvlmFixture, parsed)
+	err := ParseKVLM(KVLMFixture, parsed)
 
 	assert.NoError(t, err)
 
@@ -133,6 +133,6 @@ Q52UWybBzpaP9HEd4XnR+HuQ4k2K0ns2KgNImsNvIyFwbpMUyUWLMPimaV1DWUXo
 
 	dumped := DumpKVLM(data)
 
-	assert.Equal(t, string(kvlmFixture), dumped)
+	assert.Equal(t, string(KVLMFixture), dumped)
 
 }
