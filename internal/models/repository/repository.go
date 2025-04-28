@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"bytes"
 	"compress/zlib"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mrwbarg/go-git-clone/internal/models/config"
 	"github.com/mrwbarg/go-git-clone/internal/models/object"
@@ -77,7 +79,19 @@ func (r *Repository) WriteObject(obj object.Object) error {
 		return fmt.Errorf("fatal: error writing object %s: %v", hash, err)
 	}
 
-	err = os.WriteFile(path, obj.Serialize(), os.ModePerm)
+	var fileBuffer bytes.Buffer
+	writer := zlib.NewWriter(&fileBuffer)
+	_, err = writer.Write(obj.Serialize())
+	if err != nil {
+		return fmt.Errorf("fatal: error compressing object %s: %v", hash, err)
+	}
+
+	err = writer.Close()
+	if err != nil {
+		return fmt.Errorf("fatal: error compressing object %s: %v", hash, err)
+	}
+
+	err = os.WriteFile(path, fileBuffer.Bytes(), os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("fatal: error writing object %s: %v", hash, err)
 	}
@@ -241,4 +255,41 @@ func Initialize(path string) *Repository {
 	repo.conf.Initialize(repo.gitdir)
 
 	return repo
+}
+
+func (r *Repository) FindObject(name string, format *object.ObjectType, follow bool) string {
+	return name
+}
+
+func (r *Repository) Log(start object.Commit) string {
+
+	var builder strings.Builder
+	builder.WriteString(start.Log())
+	builder.WriteString("\n\n")
+
+	parent := start.Parent()
+	for parent != "" {
+		obj, err := r.ReadObject(start.Parent())
+		if err != nil {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: error reading object %s: %v", start.Parent(), err))
+		}
+
+		if (*obj).Type() != object.CommitType {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: object %s is not a commit", start.Parent()))
+		}
+
+		commit, ok := (*obj).(*object.Commit)
+		if !ok {
+			utils.ErrorAndExit(fmt.Sprintf("fatal: object %s is not a commit", start.Parent()))
+		}
+
+		builder.WriteString(commit.Log())
+		builder.WriteString("\n\n")
+
+		parent = commit.Parent()
+	}
+
+	fmt.Print(builder.String())
+	return builder.String()
+
 }

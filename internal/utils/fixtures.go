@@ -24,3 +24,30 @@ gpgsig -----BEGIN PGP SIGNATURE-----
 
 With great power, 
 comes great responsibility.`)
+
+var ParentFixture []byte = []byte(`tree 29ff16c9c14e2652b22f8b78bb08a5a07930c147
+author Mauricio Barg <mbarg@email.com> 1527025023 +0200
+committer Mauricio Barg <mbarg@email.com> 1527025044 +0200
+
+With great power, 
+comes great responsibility.`)
+
+var ChildFixture []byte = []byte(`tree 29ff16c9c14e2652b22f8b78bb08a5a07930c147
+parent cc8bf0100229330779d631d0c21662860337fc01
+author Mauricio Barg <mbarg@email.com> 1527025023 +0200
+committer Mauricio Barg <mbarg@email.com> 1527025044 +0200
+
+And then he died. `)
+
+var LogFixture = `commit 3d304ce573788d99e2a15382184b1435ccd6f102
+Author: Mauricio Barg <mbarg@email.com>
+
+	And then he died. 
+
+commit cc8bf0100229330779d631d0c21662860337fc01
+Author: Mauricio Barg <mbarg@email.com>
+
+	With great power, 
+	comes great responsibility.
+
+`

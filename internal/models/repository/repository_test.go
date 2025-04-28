@@ -175,3 +175,22 @@ func Test_Repository_WriteObject(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, fileInfo.IsDir())
 }
+
+func Test_Repository_Log(t *testing.T) {
+	tempDir := t.TempDir()
+	repo := Initialize(tempDir)
+
+	parentObj, _ := object.Load(append([]byte("commit 208\x00"), utils.ParentFixture...))
+	childObj, _ := object.Load(append([]byte("commit 228\x00"), utils.ChildFixture...))
+
+	childCommit := (*childObj).(*object.Commit)
+
+	_ = repo.WriteObject(*parentObj)
+	_ = repo.WriteObject(childCommit)
+
+	log := repo.Log(*childCommit)
+
+	assert.Equal(t,
+		utils.LogFixture, log)
+
+}
