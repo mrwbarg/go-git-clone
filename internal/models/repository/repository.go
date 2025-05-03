@@ -289,7 +289,6 @@ func (r *Repository) Log(start object.Commit) string {
 		parent = commit.Parent()
 	}
 
-	fmt.Print(builder.String())
 	return builder.String()
 
 }

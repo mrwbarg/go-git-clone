@@ -42,9 +42,9 @@ func Test_Commit_Log(t *testing.T) {
 
 	log := commit.Log()
 	fmt.Println(log)
-	assert.Equal(t, `commit dcf5b16e76cce7425d0beaef62d79a7d10fce1f5
+	assert.Equal(t, `commit d5343baae5a139b4f7dc39fc7a39b445d4ccad1b
 Author: Mauricio Barg <mbarg@email.com>
 
-	With great power,
+	With great power, 
 	comes great responsibility.`, log)
 }

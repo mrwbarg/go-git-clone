@@ -25,5 +25,5 @@ func LogCmd(sha string) {
 		utils.ErrorAndExit("fatal: not a commit object")
 	}
 
-	repo.Log(*commit)
+	fmt.Println(repo.Log(*commit))
 }
